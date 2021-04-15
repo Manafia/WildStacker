@@ -282,11 +282,6 @@ public final class SpawnersListener implements Listener {
 
         e.setCancelled(true);
 
-        if(e.getPlayer().getGameMode() != GameMode.CREATIVE && plugin.getSettings().spawnersMineRequireSilk &&
-                !ItemUtils.isPickaxeAndHasSilkTouch(e.getPlayer().getItemInHand())){
-            Locale.SPAWNER_BREAK_WITHOUT_SILK.send(e.getPlayer());
-            return;
-        }
 
         int originalAmount = stackedSpawner.getStackAmount();
         int stackAmount = e.getPlayer().isSneaking() && plugin.getSettings().shiftGetWholeSpawnerStack ? originalAmount : 1;
@@ -294,16 +289,6 @@ public final class SpawnersListener implements Listener {
         handleSpawnerBreak(plugin, stackedSpawner, stackAmount, e.getPlayer(), false);
     }
 
-    public static boolean handleSpawnerBreak(WildStackerPlugin plugin, StackedSpawner stackedSpawner, int breakAmount, Player player, boolean breakMenu){
-        Pair<Double, Boolean> chargeInfo = plugin.getSettings().spawnersBreakCharge
-                .getOrDefault(stackedSpawner.getSpawnedType(), new Pair<>(0.0, false));
-
-        double amountToCharge = chargeInfo.getKey() * (chargeInfo.getValue() ? breakAmount : 1);
-
-        if (amountToCharge > 0 && PluginHooks.isVaultEnabled && EconomyHook.getMoneyInBank(player) < amountToCharge) {
-            Locale.SPAWNER_BREAK_NOT_ENOUGH_MONEY.send(player, amountToCharge);
-            return false;
-        }
 
         if(stackedSpawner.runUnstack(breakAmount, player) == UnstackResult.SUCCESS){
             Block block = stackedSpawner.getLocation().getBlock();
@@ -317,13 +302,6 @@ public final class SpawnersListener implements Listener {
             if(stackedSpawner.getStackAmount() <= 0)
                 block.setType(Material.AIR);
 
-            if(amountToCharge > 0)
-                EconomyHook.withdrawMoney(player, amountToCharge);
-
-            Locale.SPAWNER_BREAK.send(player, EntityUtils.getFormattedType(entityType.name()), breakAmount, GeneralUtils.format(amountToCharge));
-
-            return true;
-        }
 
         return false;
     }
